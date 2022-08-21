@@ -10,15 +10,15 @@ import android.view.MenuItem
 import androidx.appcompat.widget.SearchView
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.gson.Gson
 import okhttp3.*
 import java.io.IOException
-import java.net.URLEncoder
 import java.util.concurrent.TimeUnit
 
 class MainActivity : AppCompatActivity() {
     private lateinit var mRecycleView: RecyclerView
     private val TAG = "MainActivity"
-    private lateinit var mData: List<AqiData>
+    private lateinit var mData: List<Records>
     private val mHandler = Handler(Looper.getMainLooper())
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -84,11 +84,9 @@ class MainActivity : AppCompatActivity() {
             override fun onResponse(call: Call, response: Response) {
                 // Log.d(TAG, "onResponse: ${response.body?.string()}")
                 Log.d(TAG, "onResponse: body length = ${response.body?.contentLength()}")
-                mData = ArrayList()
-                mData = mData + AqiData(1, "Taipei", "Taipei City", 35, "Normal")
-                mData = mData + AqiData(2, "Taipei", "Taipei City", 45, "Normal")
-                mData = mData + AqiData(3, "Taipei", "Taipei City", 55, "Normal")
-                val adapter = AqiAdapter(mData)
+                val gson = Gson()
+                val aqiData = gson.fromJson(response.body?.string(), AqiData::class.java)
+                val adapter = AqiAdapter(aqiData.records)
                 mHandler.post({ mRecycleView.setAdapter(adapter) })
             }
         })

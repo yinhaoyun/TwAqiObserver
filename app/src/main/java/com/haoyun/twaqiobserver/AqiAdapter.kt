@@ -6,7 +6,7 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 
-class AqiAdapter constructor(data: List<AqiData>) : RecyclerView.Adapter<AqiAdapter.mViewHolder>() {
+class AqiAdapter constructor(data: ArrayList<Records>) : RecyclerView.Adapter<AqiAdapter.mViewHolder>() {
     val mData = data
     inner class mViewHolder(itemView: View):RecyclerView.ViewHolder(itemView) {
         val siteId: TextView = itemView.findViewById(R.id.site_id)
@@ -14,11 +14,11 @@ class AqiAdapter constructor(data: List<AqiData>) : RecyclerView.Adapter<AqiAdap
         val county: TextView = itemView.findViewById(R.id.county)
         val pm2_5_avg: TextView = itemView.findViewById(R.id.pm2_5_avg)
         val status: TextView = itemView.findViewById(R.id.status)
-        fun bind(data: AqiData) {
-            siteId.text = data.siteId.toString()
-            siteName.text = data.siteName
+        fun bind(data: Records) {
+            siteId.text =  data.siteid
+            siteName.text = data.sitename
             county.text = data.county
-            pm2_5_avg.text = data.pm2_5.toString()
+            pm2_5_avg.text = data.pm2_5
             status.text = data.status
         }
     }
@@ -30,7 +30,7 @@ class AqiAdapter constructor(data: List<AqiData>) : RecyclerView.Adapter<AqiAdap
     }
 
     override fun onBindViewHolder(holder: mViewHolder, position: Int) {
-        holder.bind(mData[position])
+        holder.bind(mData.get(position))
     }
 
     override fun getItemCount(): Int {
