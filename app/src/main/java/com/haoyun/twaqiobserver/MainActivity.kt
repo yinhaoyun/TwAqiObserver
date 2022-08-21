@@ -2,6 +2,8 @@ package com.haoyun.twaqiobserver
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
@@ -14,14 +16,17 @@ import java.net.URLEncoder
 import java.util.concurrent.TimeUnit
 
 class MainActivity : AppCompatActivity() {
+    private lateinit var mRecycleView: RecyclerView
     private val TAG = "MainActivity"
+    private lateinit var mData: List<AqiData>
+    private val mHandler = Handler(Looper.getMainLooper())
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        var recyclerView: RecyclerView = findViewById(R.id.recyclerView)
-        recyclerView.layoutManager = LinearLayoutManager(this)
+        mRecycleView = findViewById(R.id.recyclerView)
+        mRecycleView.layoutManager = LinearLayoutManager(this)
         getAqiData()
         // testPost()
     }
@@ -79,6 +84,12 @@ class MainActivity : AppCompatActivity() {
             override fun onResponse(call: Call, response: Response) {
                 // Log.d(TAG, "onResponse: ${response.body?.string()}")
                 Log.d(TAG, "onResponse: body length = ${response.body?.contentLength()}")
+                mData = ArrayList()
+                mData = mData + AqiData(1, "Taipei", "Taipei City", 35, "Normal")
+                mData = mData + AqiData(2, "Taipei", "Taipei City", 45, "Normal")
+                mData = mData + AqiData(3, "Taipei", "Taipei City", 55, "Normal")
+                val adapter = AqiAdapter(mData)
+                mHandler.post({ mRecycleView.setAdapter(adapter) })
             }
         })
         Log.d(TAG, "getAqiData END")
