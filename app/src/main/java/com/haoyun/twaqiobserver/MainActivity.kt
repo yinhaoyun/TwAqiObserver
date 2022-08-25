@@ -10,6 +10,7 @@ import android.view.MenuItem
 import androidx.appcompat.widget.SearchView
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.google.gson.Gson
 import okhttp3.*
 import java.io.IOException
@@ -18,8 +19,8 @@ import java.util.concurrent.TimeUnit
 class MainActivity : AppCompatActivity() {
     private lateinit var mRecycleView: RecyclerView
     private val TAG = "MainActivity"
-    private lateinit var mData: List<Records>
     private val mHandler = Handler(Looper.getMainLooper())
+    private lateinit var mSwipe: SwipeRefreshLayout
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -27,13 +28,23 @@ class MainActivity : AppCompatActivity() {
 
         mRecycleView = findViewById(R.id.recyclerView)
         mRecycleView.layoutManager = LinearLayoutManager(this)
+        mSwipe = findViewById(R.id.swipe)
+        setupEmptyView() // for swipe to work
         getAqiData()
         // testPost()
     }
 
+    private fun setupEmptyView() {
+        val data: List<Records> = listOf(Records())
+        mRecycleView.setAdapter(AqiAdapter(data))
+        mSwipe.setOnRefreshListener {
+            getAqiData()
+        }
+    }
+
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.menu, menu)
-        var menuItem: MenuItem = menu.findItem(R.id.action_search)
+        val menuItem: MenuItem = menu.findItem(R.id.action_search)
         var searchView: SearchView = menuItem.actionView as SearchView
 
         return super.onCreateOptionsMenu(menu)
@@ -63,6 +74,7 @@ class MainActivity : AppCompatActivity() {
     }
     private fun getAqiData() {
         Log.d(TAG, "getAqiData")
+        mSwipe.isRefreshing = true
         val url = "https://data.epa.gov.tw/api/v2/aqx_p_432?limit=100&api_key=cebebe84-e17d-4022-a28f-81097fda5896&sort=ImportDate%20desc&format=json"
         Log.d(TAG, "getAqiData: url = $url")
         val okHttpClient = OkHttpClient().newBuilder()
@@ -87,7 +99,10 @@ class MainActivity : AppCompatActivity() {
                 val gson = Gson()
                 val aqiData = gson.fromJson(response.body?.string(), AqiData::class.java)
                 val adapter = AqiAdapter(aqiData.records)
-                mHandler.post({ mRecycleView.setAdapter(adapter) })
+                mHandler.post {
+                    mRecycleView.setAdapter(adapter)
+                    mSwipe.isRefreshing = false
+                }
             }
         })
         Log.d(TAG, "getAqiData END")

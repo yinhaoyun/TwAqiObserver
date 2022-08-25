@@ -6,7 +6,7 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 
-class AqiAdapter constructor(data: ArrayList<Records>) : RecyclerView.Adapter<AqiAdapter.mViewHolder>() {
+class AqiAdapter constructor(data: List<Records>) : RecyclerView.Adapter<AqiAdapter.mViewHolder>() {
     val mData = data
     inner class mViewHolder(itemView: View):RecyclerView.ViewHolder(itemView) {
         val siteId: TextView = itemView.findViewById(R.id.site_id)
