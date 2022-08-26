@@ -17,6 +17,8 @@ import java.io.IOException
 import java.util.concurrent.TimeUnit
 
 class MainActivity : AppCompatActivity() {
+    private lateinit var mAdapter: AqiAdapter
+    private lateinit var mRecycleViewHorizontal: RecyclerView
     private lateinit var mRecycleView: RecyclerView
     private val TAG = "MainActivity"
     private val mHandler = Handler(Looper.getMainLooper())
@@ -26,6 +28,8 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        mRecycleViewHorizontal= findViewById(R.id.recyclerViewHorizontal)
+        mRecycleViewHorizontal.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
         mRecycleView = findViewById(R.id.recyclerView)
         mRecycleView.layoutManager = LinearLayoutManager(this)
         mSwipe = findViewById(R.id.swipe)
@@ -46,32 +50,21 @@ class MainActivity : AppCompatActivity() {
         menuInflater.inflate(R.menu.menu, menu)
         val menuItem: MenuItem = menu.findItem(R.id.action_search)
         var searchView: SearchView = menuItem.actionView as SearchView
+        searchView.queryHint = "請輸入「站名」"
+        searchView.setOnQueryTextListener(object: SearchView.OnQueryTextListener {
+            override fun onQueryTextSubmit(query: String?): Boolean {
+                mAdapter.filter.filter(query)
+                return false
+            }
 
+            override fun onQueryTextChange(newText: String?): Boolean {
+                mAdapter.filter.filter(newText)
+                return false
+            }
+        })
         return super.onCreateOptionsMenu(menu)
     }
 
-    private fun testPost() {
-        Log.d(TAG, "testPost")
-        val testUrl =
-            "https://reqres.in/api/users"
-        val okHttpClient = OkHttpClient().newBuilder().addInterceptor(LoggingInterceptor()).build()
-        val formBody: FormBody = FormBody.Builder()
-            .add("name", "HKT")
-            .add("job", "Teacher")
-            .build()
-        val request: Request = Request.Builder().url(testUrl).post(formBody).build()
-        val call = okHttpClient.newCall(request)
-        call.enqueue(object : Callback {
-            override fun onFailure(call: Call, e: IOException) {
-                e.printStackTrace()
-            }
-
-            override fun onResponse(call: Call, response: Response) {
-                Log.d("QQQ", "response: ${response.body?.string()}")
-            }
-        })
-        Log.d(TAG, "testPost END")
-    }
     private fun getAqiData() {
         Log.d(TAG, "getAqiData")
         mSwipe.isRefreshing = true
@@ -98,9 +91,10 @@ class MainActivity : AppCompatActivity() {
                 Log.d(TAG, "onResponse: body length = ${response.body?.contentLength()}")
                 val gson = Gson()
                 val aqiData = gson.fromJson(response.body?.string(), AqiData::class.java)
-                val adapter = AqiAdapter(aqiData.records)
+                mAdapter = AqiAdapter(aqiData.records)
                 mHandler.post {
-                    mRecycleView.setAdapter(adapter)
+                    mRecycleViewHorizontal.setAdapter(mAdapter)
+                    mRecycleView.setAdapter(mAdapter)
                     mSwipe.isRefreshing = false
                 }
             }
