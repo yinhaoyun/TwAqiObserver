@@ -9,9 +9,10 @@ import android.widget.Filterable
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 
-class AqiAdapter constructor(data: List<Records>) : RecyclerView.Adapter<AqiAdapter.mViewHolder>(), Filterable {
+class AqiAdapter constructor(data: List<Records>, itemViewID: Int = R.layout.recycle_item) : RecyclerView.Adapter<AqiAdapter.mViewHolder>(), Filterable {
     private val mData: List<Records> = data
     private var mDataFilter: List<Records> = mData.toList()
+    private var mItemViewID = itemViewID
     inner class mViewHolder(itemView: View):RecyclerView.ViewHolder(itemView) {
         val siteId: TextView = itemView.findViewById(R.id.site_id)
         val siteName: TextView = itemView.findViewById(R.id.site_name)
@@ -29,7 +30,7 @@ class AqiAdapter constructor(data: List<Records>) : RecyclerView.Adapter<AqiAdap
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): mViewHolder {
         val inflater = LayoutInflater.from(parent.context)
-        val itemView = inflater.inflate(R.layout.recycle_item, parent, false)
+        val itemView = inflater.inflate(mItemViewID, parent, false)
         return mViewHolder(itemView)
     }
 

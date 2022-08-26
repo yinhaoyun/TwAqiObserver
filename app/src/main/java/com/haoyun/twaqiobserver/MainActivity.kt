@@ -17,6 +17,7 @@ import java.io.IOException
 import java.util.concurrent.TimeUnit
 
 class MainActivity : AppCompatActivity() {
+    private lateinit var mAdapterHorizontal: AqiAdapter
     private lateinit var mAdapter: AqiAdapter
     private lateinit var mRecycleViewHorizontal: RecyclerView
     private lateinit var mRecycleView: RecyclerView
@@ -91,9 +92,10 @@ class MainActivity : AppCompatActivity() {
                 Log.d(TAG, "onResponse: body length = ${response.body?.contentLength()}")
                 val gson = Gson()
                 val aqiData = gson.fromJson(response.body?.string(), AqiData::class.java)
+                mAdapterHorizontal = AqiAdapter(aqiData.records, R.layout.recycle_item_horizontal)
                 mAdapter = AqiAdapter(aqiData.records)
                 mHandler.post {
-                    mRecycleViewHorizontal.setAdapter(mAdapter)
+                    mRecycleViewHorizontal.setAdapter(mAdapterHorizontal)
                     mRecycleView.setAdapter(mAdapter)
                     mSwipe.isRefreshing = false
                 }
