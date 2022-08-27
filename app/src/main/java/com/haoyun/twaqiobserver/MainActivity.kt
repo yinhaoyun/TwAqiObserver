@@ -8,8 +8,10 @@ import android.os.Looper
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
+import android.view.View
 import android.widget.Toast
 import androidx.appcompat.widget.SearchView
+import androidx.core.view.MenuItemCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
@@ -55,17 +57,30 @@ class MainActivity : AppCompatActivity() {
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.menu, menu)
         val menuItem: MenuItem = menu.findItem(R.id.action_search)
-        var searchView: SearchView = menuItem.actionView as SearchView
+        val searchView: SearchView = menuItem.actionView as SearchView
         searchView.queryHint = "請輸入「站名」"
         searchView.setOnQueryTextListener(object: SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean {
+                Log.d(TAG, "onQueryTextSubmit: $query")
                 mAdapter.filter.filter(query)
                 return false
             }
 
             override fun onQueryTextChange(newText: String?): Boolean {
+                Log.d(TAG, "onQueryTextSubmit: $newText")
                 mAdapter.filter.filter(newText)
                 return false
+            }
+        })
+        menuItem.setOnActionExpandListener(object : MenuItem.OnActionExpandListener {
+            override fun onMenuItemActionExpand(p0: MenuItem?): Boolean {
+                mRecycleViewHorizontal.visibility = View.GONE
+                return true
+            }
+
+            override fun onMenuItemActionCollapse(p0: MenuItem?): Boolean {
+                mRecycleViewHorizontal.visibility = View.VISIBLE
+                return true
             }
         })
         return super.onCreateOptionsMenu(menu)
