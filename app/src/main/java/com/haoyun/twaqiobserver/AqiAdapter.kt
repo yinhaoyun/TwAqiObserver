@@ -25,6 +25,9 @@ class AqiAdapter constructor(data: List<Records>, itemViewID: Int = R.layout.rec
             county.text = data.county
             pm2_5_avg.text = data.pm2_5
             status.text = data.status
+            if (mItemViewID == R.layout.recycle_item && data.status.equals("良好")) {
+                status.text = "The status is good, we want to go out to have fun"
+            }
         }
     }
 
