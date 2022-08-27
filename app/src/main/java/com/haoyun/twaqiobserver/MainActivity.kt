@@ -22,8 +22,10 @@ import java.util.*
 import java.util.concurrent.TimeUnit
 
 class MainActivity : AppCompatActivity() {
+    private lateinit var mSep: View
     private lateinit var mAdapterHorizontal: AqiAdapter
     private lateinit var mAdapter: AqiAdapter
+    private lateinit var mAdapterSearch: AqiAdapter
     private lateinit var mRecycleViewHorizontal: RecyclerView
     private lateinit var mRecycleView: RecyclerView
     private val TAG = "MainActivity"
@@ -41,6 +43,7 @@ class MainActivity : AppCompatActivity() {
         mRecycleView = findViewById(R.id.recyclerView)
         mRecycleView.layoutManager = LinearLayoutManager(this)
         mSwipe = findViewById(R.id.swipe)
+        mSep = findViewById<View>(R.id.sep1)
         setupEmptyView() // for swipe to work
         getAqiData()
         // testPost()
@@ -62,24 +65,31 @@ class MainActivity : AppCompatActivity() {
         searchView.setOnQueryTextListener(object: SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean {
                 Log.d(TAG, "onQueryTextSubmit: $query")
-                mAdapter.filter.filter(query)
+                mAdapterSearch.filter.filter(query)
                 return false
             }
 
             override fun onQueryTextChange(newText: String?): Boolean {
                 Log.d(TAG, "onQueryTextSubmit: $newText")
-                mAdapter.filter.filter(newText)
+                mAdapterSearch.filter.filter(newText)
                 return false
             }
         })
         menuItem.setOnActionExpandListener(object : MenuItem.OnActionExpandListener {
             override fun onMenuItemActionExpand(p0: MenuItem?): Boolean {
                 mRecycleViewHorizontal.visibility = View.GONE
+                mSep.visibility = View.GONE
+                mRecycleView.adapter = mAdapterSearch
+                mSwipe.isEnabled = false
                 return true
             }
 
             override fun onMenuItemActionCollapse(p0: MenuItem?): Boolean {
                 mRecycleViewHorizontal.visibility = View.VISIBLE
+                mSep.visibility = View.VISIBLE
+                mRecycleView.adapter = mAdapter
+                mSwipe.isEnabled = true
+
                 return true
             }
         })
@@ -117,6 +127,7 @@ class MainActivity : AppCompatActivity() {
                     aqiData.records.filter { it.pm2_5!!.isNotEmpty() && it.pm2_5?.toInt()!! <= mPm25Thread }.sortedBy { it.pm2_5!!.toInt() },
                     R.layout.recycle_item_horizontal)
                 mAdapter = AqiAdapter(aqiData.records.filter { it.pm2_5!!.isNotEmpty() && it.pm2_5!!.toInt() > mPm25Thread }.sortedByDescending { it.pm2_5!!.toInt() })
+                mAdapterSearch = AqiAdapter(aqiData.records)
                 mHandler.post {
                     Log.d(TAG, "Data size = ${aqiData.records.size}, PM2.5 median = $mPm25Thread")
                     Toast.makeText(mContext, "Data size = ${aqiData.records.size}, PM2.5 median = $mPm25Thread", Toast.LENGTH_LONG).show()
