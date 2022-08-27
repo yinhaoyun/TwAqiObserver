@@ -4,9 +4,7 @@ import android.annotation.SuppressLint
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Filter
-import android.widget.Filterable
-import android.widget.TextView
+import android.widget.*
 import androidx.recyclerview.widget.RecyclerView
 
 class AqiAdapter constructor(data: List<Records>, itemViewID: Int = R.layout.recycle_item) : RecyclerView.Adapter<AqiAdapter.mViewHolder>(), Filterable {
@@ -19,16 +17,29 @@ class AqiAdapter constructor(data: List<Records>, itemViewID: Int = R.layout.rec
         val county: TextView = itemView.findViewById(R.id.county)
         val pm2_5_avg: TextView = itemView.findViewById(R.id.pm2_5_avg)
         val status: TextView = itemView.findViewById(R.id.status)
+        val arrow = itemView.findViewById<ImageView>(R.id.right_arrow)
+
+        init {
+            itemView.setOnClickListener { v ->
+                if (arrow != null && arrow.visibility == View.VISIBLE) {
+                    Toast.makeText(v!!.context, "So sad, the air is ${status.text} and not good~", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
         fun bind(data: Records) {
             siteId.text =  data.siteid
             siteName.text = data.sitename
             county.text = data.county
             pm2_5_avg.text = data.pm2_5
-            status.text = data.status
             if (mItemViewID == R.layout.recycle_item && data.status.equals("良好")) {
                 status.text = "The status is good, we want to go out to have fun"
+                arrow?.visibility = View.GONE
+            } else {
+                status.text = data.status
+                arrow?.visibility = View.VISIBLE
             }
         }
+
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): mViewHolder {

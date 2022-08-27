@@ -43,6 +43,15 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toEndOf="@+id/site_id" />
 
+    <ImageView
+        android:id="@+id/right_arrow"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        android:src="@drawable/ic_baseline_arrow_forward_ios_24"
+        android:contentDescription="clickable arrow"/>
     <TextView
         android:id="@+id/pm2_5_avg"
         android:layout_width="wrap_content"
@@ -51,7 +60,7 @@
         android:layout_marginEnd="8dp"
         android:text="TextView"
         android:textSize="24sp"
-        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/right_arrow"
         app:layout_constraintTop_toTopOf="parent"
         tools:text="PM 2.5" />
 
@@ -75,5 +84,5 @@
         android:gravity="end"
         app:layout_constraintStart_toEndOf="@id/guidelineLeft"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintEnd_toStartOf="@id/right_arrow" />
 </androidx.constraintlayout.widget.ConstraintLayout>
