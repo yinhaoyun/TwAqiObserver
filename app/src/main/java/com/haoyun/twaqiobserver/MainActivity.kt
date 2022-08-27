@@ -1,5 +1,6 @@
 package com.haoyun.twaqiobserver
 
+import android.content.Context
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.Handler
@@ -7,6 +8,7 @@ import android.os.Looper
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
+import android.widget.Toast
 import androidx.appcompat.widget.SearchView
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -14,6 +16,7 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.google.gson.Gson
 import okhttp3.*
 import java.io.IOException
+import java.util.*
 import java.util.concurrent.TimeUnit
 
 class MainActivity : AppCompatActivity() {
@@ -24,9 +27,11 @@ class MainActivity : AppCompatActivity() {
     private val TAG = "MainActivity"
     private val mHandler = Handler(Looper.getMainLooper())
     private lateinit var mSwipe: SwipeRefreshLayout
-
+    private var mPm25Thread: Int = 30
+    private lateinit var mContext: Context
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        mContext = this
         setContentView(R.layout.activity_main)
 
         mRecycleViewHorizontal= findViewById(R.id.recyclerViewHorizontal)
@@ -92,9 +97,14 @@ class MainActivity : AppCompatActivity() {
                 Log.d(TAG, "onResponse: body length = ${response.body?.contentLength()}")
                 val gson = Gson()
                 val aqiData = gson.fromJson(response.body?.string(), AqiData::class.java)
-                mAdapterHorizontal = AqiAdapter(aqiData.records, R.layout.recycle_item_horizontal)
-                mAdapter = AqiAdapter(aqiData.records)
+                mPm25Thread = calculateMedianPm25(aqiData.records)
+                mAdapterHorizontal = AqiAdapter(
+                    aqiData.records.filter { it.pm2_5!!.isNotEmpty() && it.pm2_5?.toInt()!! <= mPm25Thread }.sortedBy { it.pm2_5!!.toInt() },
+                    R.layout.recycle_item_horizontal)
+                mAdapter = AqiAdapter(aqiData.records.filter { it.pm2_5!!.isNotEmpty() && it.pm2_5!!.toInt() > mPm25Thread }.sortedByDescending { it.pm2_5!!.toInt() })
                 mHandler.post {
+                    Log.d(TAG, "Data size = ${aqiData.records.size}, PM2.5 median = $mPm25Thread")
+                    Toast.makeText(mContext, "Data size = ${aqiData.records.size}, PM2.5 median = $mPm25Thread", Toast.LENGTH_LONG).show()
                     mRecycleViewHorizontal.setAdapter(mAdapterHorizontal)
                     mRecycleView.setAdapter(mAdapter)
                     mSwipe.isRefreshing = false
@@ -102,6 +112,17 @@ class MainActivity : AppCompatActivity() {
             }
         })
         Log.d(TAG, "getAqiData END")
+    }
+
+    private fun calculateMedianPm25(records: ArrayList<Records>): Int {
+        val list: MutableList<Int> = mutableListOf()
+        records.forEach{
+            if (it.pm2_5 != null && it.pm2_5!!.isNotEmpty())
+                list += it.pm2_5!!.toInt()
+        }
+
+        list.sort()
+        return list[list.size / 2]
     }
 
     class LoggingInterceptor : Interceptor {
