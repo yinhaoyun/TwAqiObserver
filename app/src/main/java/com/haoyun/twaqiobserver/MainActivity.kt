@@ -9,11 +9,13 @@ import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.widget.SearchView
 import androidx.core.view.MenuItemCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import androidx.recyclerview.widget.RecyclerView.AdapterDataObserver
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.google.gson.Gson
 import okhttp3.*
@@ -22,6 +24,8 @@ import java.util.*
 import java.util.concurrent.TimeUnit
 
 class MainActivity : AppCompatActivity() {
+    private lateinit var mSearchView: SearchView
+    private lateinit var mSearchStatus: TextView
     private lateinit var mSep: View
     private lateinit var mAdapterHorizontal: AqiAdapter
     private lateinit var mAdapter: AqiAdapter
@@ -43,15 +47,16 @@ class MainActivity : AppCompatActivity() {
         mRecycleView = findViewById(R.id.recyclerView)
         mRecycleView.layoutManager = LinearLayoutManager(this)
         mSwipe = findViewById(R.id.swipe)
-        mSep = findViewById<View>(R.id.sep1)
+        mSep = findViewById(R.id.sep1)
+        mSep.visibility = View.INVISIBLE
+        mSearchStatus = findViewById(R.id.search_status)
         setupEmptyView() // for swipe to work
         getAqiData()
         // testPost()
     }
 
     private fun setupEmptyView() {
-        val data: List<Records> = listOf(Records())
-        mRecycleView.setAdapter(AqiAdapter(data))
+        mRecycleView.adapter = null
         mSwipe.setOnRefreshListener {
             getAqiData()
         }
@@ -60,9 +65,9 @@ class MainActivity : AppCompatActivity() {
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.menu, menu)
         val menuItem: MenuItem = menu.findItem(R.id.action_search)
-        val searchView: SearchView = menuItem.actionView as SearchView
-        searchView.queryHint = "請輸入「站名」"
-        searchView.setOnQueryTextListener(object: SearchView.OnQueryTextListener {
+        mSearchView = menuItem.actionView as SearchView
+        mSearchView.queryHint = "請輸入「站名」"
+        mSearchView.setOnQueryTextListener(object: SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean {
                 Log.d(TAG, "onQueryTextSubmit: $query")
                 mAdapterSearch.filter.filter(query)
@@ -70,26 +75,31 @@ class MainActivity : AppCompatActivity() {
             }
 
             override fun onQueryTextChange(newText: String?): Boolean {
-                Log.d(TAG, "onQueryTextSubmit: $newText")
+                Log.d(TAG, "onQueryTextChange: $newText")
                 mAdapterSearch.filter.filter(newText)
                 return false
             }
         })
         menuItem.setOnActionExpandListener(object : MenuItem.OnActionExpandListener {
             override fun onMenuItemActionExpand(p0: MenuItem?): Boolean {
+                Log.d(TAG, "onMenuItemActionExpand")
                 mRecycleViewHorizontal.visibility = View.GONE
-                mSep.visibility = View.GONE
+                mRecycleView.visibility = View.INVISIBLE
+                mSep.visibility = View.INVISIBLE
+                mSearchStatus.visibility = View.VISIBLE
                 mRecycleView.adapter = mAdapterSearch
                 mSwipe.isEnabled = false
                 return true
             }
 
             override fun onMenuItemActionCollapse(p0: MenuItem?): Boolean {
+                Log.d(TAG, "onMenuItemActionCollapse")
                 mRecycleViewHorizontal.visibility = View.VISIBLE
+                mRecycleView.visibility = View.VISIBLE
                 mSep.visibility = View.VISIBLE
+                mSearchStatus.visibility = View.INVISIBLE
                 mRecycleView.adapter = mAdapter
                 mSwipe.isEnabled = true
-
                 return true
             }
         })
@@ -128,12 +138,33 @@ class MainActivity : AppCompatActivity() {
                     R.layout.recycle_item_horizontal)
                 mAdapter = AqiAdapter(aqiData.records.filter { it.pm2_5!!.isNotEmpty() && it.pm2_5!!.toInt() > mPm25Thread }.sortedByDescending { it.pm2_5!!.toInt() })
                 mAdapterSearch = AqiAdapter(aqiData.records)
+                mAdapterSearch.registerAdapterDataObserver(object : AdapterDataObserver() {
+                    override fun onChanged() {
+                        super.onChanged()
+                        Log.d(TAG, "onQueryTextChange: mAdapterSearch.itemCount = ${mAdapterSearch.itemCount}")
+                        if (mSearchView.query.isEmpty()) {
+                            mSearchStatus.text = "輸入「站名」\n查詢該地區空汙資訊"
+                        } else if (mAdapterSearch.itemCount == 0) {
+                            mSearchStatus.text = "找不到「${mSearchView.query}」\n相關的空汙資訊"
+                        } else {
+                            mSearchStatus.text = ""
+                        }
+                        if (mSearchStatus.text.isEmpty()) {
+                            mRecycleView.visibility = View.VISIBLE
+                            mSearchStatus.visibility = View.INVISIBLE
+                        } else {
+                            mRecycleView.visibility = View.INVISIBLE
+                            mSearchStatus.visibility = View.VISIBLE
+                        }
+                    }
+                })
                 mHandler.post {
                     Log.d(TAG, "Data size = ${aqiData.records.size}, PM2.5 median = $mPm25Thread")
                     Toast.makeText(mContext, "Data size = ${aqiData.records.size}, PM2.5 median = $mPm25Thread", Toast.LENGTH_LONG).show()
                     mRecycleViewHorizontal.setAdapter(mAdapterHorizontal)
                     mRecycleView.setAdapter(mAdapter)
                     mSwipe.isRefreshing = false
+                    mSep.visibility = View.VISIBLE
                 }
             }
         })

@@ -1,12 +1,14 @@
 package com.haoyun.twaqiobserver
 
 import android.annotation.SuppressLint
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.*
 import androidx.recyclerview.widget.RecyclerView
 
+private const val TAG = "AqiAdapter"
 class AqiAdapter constructor(data: List<Records>, itemViewID: Int = R.layout.recycle_item) : RecyclerView.Adapter<AqiAdapter.mViewHolder>(), Filterable {
     private val mData: List<Records> = data
     private var mDataFilter: List<Records> = mData.toList()
@@ -71,6 +73,7 @@ class AqiAdapter constructor(data: List<Records>, itemViewID: Int = R.layout.rec
                 val res = FilterResults()
                 res.values = mDataFilter
                 res.count = mDataFilter.size
+                Log.d(TAG, "performFiltering: res.count = ${res.count}")
                 return res
             }
 
